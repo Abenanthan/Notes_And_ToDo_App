@@ -1,0 +1,4 @@
+<resources>
+    <!-- Window theme only. The real colors come from the Compose theme in ui/theme/Theme.kt. -->
+    <style name="Theme.NotesToDo" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
