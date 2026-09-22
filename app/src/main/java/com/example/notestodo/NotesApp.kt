@@ -4,9 +4,10 @@ import android.app.Application
 import androidx.room.Room
 import com.example.notestodo.data.local.AppDatabase
 import com.example.notestodo.data.repository.NoteRepository
+import com.example.notestodo.data.repository.TaskRepository
 
-// Manual dependency injection: the app holds one database and one repository,
-// both created lazily the first time they are used.
+// Manual dependency injection: the app holds one database and one repository per
+// feature, all created lazily the first time they are used.
 class NotesApp : Application() {
 
     private val database by lazy {
@@ -14,4 +15,5 @@ class NotesApp : Application() {
     }
 
     val noteRepository by lazy { NoteRepository(database.noteDao()) }
+    val taskRepository by lazy { TaskRepository(database.taskDao()) }
 }

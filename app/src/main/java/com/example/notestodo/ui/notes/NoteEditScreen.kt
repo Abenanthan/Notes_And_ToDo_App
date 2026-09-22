@@ -20,7 +20,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,9 +31,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.notestodo.ui.common.plainTextFieldColors
 import com.example.notestodo.viewmodel.NoteEditViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,13 +70,6 @@ fun NoteEditScreen(
         // safeDrawing includes the keyboard, so the editor shrinks above it instead of hiding behind it.
         contentWindowInsets = WindowInsets.safeDrawing,
     ) { padding ->
-        // Borderless fields so the screen looks like a sheet of paper, not a form.
-        val plainFieldColors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Transparent,
-            unfocusedContainerColor = Color.Transparent,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-        )
         val titleFocus = remember { FocusRequester() }
 
         Column(Modifier.fillMaxSize().padding(padding)) {
@@ -87,7 +79,7 @@ fun NoteEditScreen(
                 modifier = Modifier.fillMaxWidth().focusRequester(titleFocus),
                 placeholder = { Text("Title", style = MaterialTheme.typography.titleLarge) },
                 textStyle = MaterialTheme.typography.titleLarge,
-                colors = plainFieldColors,
+                colors = plainTextFieldColors(),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             )
             TextField(
@@ -95,7 +87,7 @@ fun NoteEditScreen(
                 onValueChange = viewModel::onContentChange,
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 placeholder = { Text("Note") },
-                colors = plainFieldColors,
+                colors = plainTextFieldColors(),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             )
         }
