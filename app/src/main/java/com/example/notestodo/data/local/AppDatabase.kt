@@ -10,10 +10,11 @@ import androidx.room.TypeConverters
 // in app/schemas to generate the SQL, so existing notes and tasks are kept.
 @Database(
     entities = [Note::class, Task::class],
-    version = 3,
+    version = 4,
     autoMigrations = [
         AutoMigration(from = 1, to = 2), // v2: added the tasks table
         AutoMigration(from = 2, to = 3), // v3: added tasks.dueTime
+        AutoMigration(from = 3, to = 4), // v4: added notes.isFavourite and notes.colorIndex
     ],
     exportSchema = true,
 )

@@ -15,7 +15,7 @@ interface NoteDao {
         """
         SELECT * FROM notes
         WHERE title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%'
-        ORDER BY updatedAt DESC
+        ORDER BY isFavourite DESC, updatedAt DESC
         """
     )
     fun searchNotes(query: String): Flow<List<Note>>

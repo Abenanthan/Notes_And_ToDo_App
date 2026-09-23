@@ -31,6 +31,10 @@ class NoteEditViewModel(
         private set
     var content by mutableStateOf("")
         private set
+    var isFavourite by mutableStateOf(false)
+        private set
+    var colorIndex by mutableStateOf(0)
+        private set
 
     // Becomes true after the save/delete has finished; the screen then navigates back.
     var isFinished by mutableStateOf(false)
@@ -43,6 +47,8 @@ class NoteEditViewModel(
                 existingNote = repository.getNote(noteId)?.also {
                     title = it.title
                     content = it.content
+                    isFavourite = it.isFavourite
+                    colorIndex = it.colorIndex
                 }
             }
         }
@@ -56,17 +62,34 @@ class NoteEditViewModel(
         content = value
     }
 
+    fun onFavouriteToggle() {
+        isFavourite = !isFavourite
+    }
+
+    fun onColorSelected(index: Int) {
+        colorIndex = index
+    }
+
     // Auto-save when leaving the screen, like Google Keep.
     fun saveAndClose() = finish {
         val note = existingNote
         when {
             // Clearing a note completely removes it; a blank new note is never saved.
             title.isBlank() && content.isBlank() -> note?.let { repository.deleteNote(it) }
-            note == null -> repository.saveNote(Note(title = title, content = content))
+            note == null -> repository.saveNote(
+                Note(title = title, content = content, isFavourite = isFavourite, colorIndex = colorIndex)
+            )
             // Only touch updatedAt if something actually changed, so just opening
             // a note doesn't move it to the top of the list.
-            note.title != title || note.content != content -> repository.saveNote(
-                note.copy(title = title, content = content, updatedAt = System.currentTimeMillis())
+            note.title != title || note.content != content ||
+                note.isFavourite != isFavourite || note.colorIndex != colorIndex -> repository.saveNote(
+                note.copy(
+                    title = title,
+                    content = content,
+                    isFavourite = isFavourite,
+                    colorIndex = colorIndex,
+                    updatedAt = System.currentTimeMillis(),
+                )
             )
             else -> Unit // unchanged, nothing to save
         }
