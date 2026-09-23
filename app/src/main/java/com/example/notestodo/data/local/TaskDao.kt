@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 @Dao
 interface TaskDao {
@@ -13,6 +14,11 @@ interface TaskDao {
     // with no due date ("dueDate IS NULL" is 1 for those, so they sort last), newest first.
     @Query("SELECT * FROM tasks ORDER BY isDone, dueDate IS NULL, dueDate, createdAt DESC")
     fun getAllTasks(): Flow<List<Task>>
+
+    // Tasks due within a date range: the calendar loads one month at a time.
+    // Room runs the LocalDate arguments through Converters, same as the stored column.
+    @Query("SELECT * FROM tasks WHERE dueDate BETWEEN :start AND :end ORDER BY isDone, dueDate, createdAt DESC")
+    fun getTasksBetween(start: LocalDate, end: LocalDate): Flow<List<Task>>
 
     @Query("SELECT * FROM tasks WHERE id = :id")
     suspend fun getTask(id: Long): Task?

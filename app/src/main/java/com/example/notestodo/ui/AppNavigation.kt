@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -22,24 +23,29 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.notestodo.ui.calendar.CalendarScreen
 import com.example.notestodo.ui.notes.NoteEditScreen
 import com.example.notestodo.ui.notes.NoteListScreen
 import com.example.notestodo.ui.tasks.TaskEditScreen
 import com.example.notestodo.ui.tasks.TaskListScreen
 import com.example.notestodo.viewmodel.NoteEditViewModel.Companion.NEW_NOTE_ID
 import com.example.notestodo.viewmodel.NoteEditViewModel.Companion.NOTE_ID_ARG
+import com.example.notestodo.viewmodel.TaskEditViewModel.Companion.DUE_DATE_ARG
 import com.example.notestodo.viewmodel.TaskEditViewModel.Companion.NEW_TASK_ID
+import com.example.notestodo.viewmodel.TaskEditViewModel.Companion.NO_DUE_DATE
 import com.example.notestodo.viewmodel.TaskEditViewModel.Companion.TASK_ID_ARG
 
 private const val NOTE_LIST_ROUTE = "notes"
 private const val NOTE_EDIT_ROUTE = "note" // full route: "note/{noteId}"
 private const val TASK_LIST_ROUTE = "tasks"
-private const val TASK_EDIT_ROUTE = "task" // full route: "task/{taskId}"
+private const val TASK_EDIT_ROUTE = "task" // full route: "task/{taskId}?dueDate={dueDate}"
+private const val CALENDAR_ROUTE = "calendar"
 
-// The tabs in the bottom bar. Phase 3 adds Calendar here.
+// The tabs in the bottom bar.
 private enum class TopLevelTab(val route: String, val label: String, val icon: ImageVector) {
     Notes(NOTE_LIST_ROUTE, "Notes", Icons.Default.Edit),
     Tasks(TASK_LIST_ROUTE, "Tasks", Icons.Default.CheckCircle),
+    Calendar(CALENDAR_ROUTE, "Calendar", Icons.Default.DateRange),
 }
 
 @Composable
@@ -84,11 +90,30 @@ fun AppNavigation() {
                     onAddTask = { navController.navigate("$TASK_EDIT_ROUTE/$NEW_TASK_ID") },
                 )
             }
+            // "?dueDate=..." is optional: the task list opens this screen without it,
+            // the calendar adds the day that was tapped.
             composable(
-                route = "$TASK_EDIT_ROUTE/{$TASK_ID_ARG}",
-                arguments = listOf(navArgument(TASK_ID_ARG) { type = NavType.LongType }),
+                route = "$TASK_EDIT_ROUTE/{$TASK_ID_ARG}?$DUE_DATE_ARG={$DUE_DATE_ARG}",
+                arguments = listOf(
+                    navArgument(TASK_ID_ARG) { type = NavType.LongType },
+                    navArgument(DUE_DATE_ARG) {
+                        type = NavType.LongType
+                        defaultValue = NO_DUE_DATE
+                    },
+                ),
             ) {
                 TaskEditScreen(onBack = { navController.popBackStack() })
+            }
+
+            composable(CALENDAR_ROUTE) {
+                CalendarScreen(
+                    onTaskClick = { id -> navController.navigate("$TASK_EDIT_ROUTE/$id") },
+                    onAddTask = { date ->
+                        navController.navigate(
+                            "$TASK_EDIT_ROUTE/$NEW_TASK_ID?$DUE_DATE_ARG=${date.toEpochDay()}"
+                        )
+                    },
+                )
             }
         }
     }

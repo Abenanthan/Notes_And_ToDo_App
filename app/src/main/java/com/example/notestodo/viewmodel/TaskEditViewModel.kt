@@ -40,7 +40,11 @@ class TaskEditViewModel(
     private var isClosing = false
 
     init {
-        if (!isNewTask) {
+        if (isNewTask) {
+            // The calendar opens this screen with the day the user tapped already filled in.
+            val presetDueDate: Long = savedStateHandle[DUE_DATE_ARG] ?: NO_DUE_DATE
+            if (presetDueDate != NO_DUE_DATE) dueDate = LocalDate.ofEpochDay(presetDueDate)
+        } else {
             viewModelScope.launch {
                 existingTask = repository.getTask(taskId)?.also {
                     title = it.title
@@ -89,6 +93,11 @@ class TaskEditViewModel(
     companion object {
         const val TASK_ID_ARG = "taskId"
         const val NEW_TASK_ID = -1L
+
+        // Optional route argument: the due date to start with, as an epoch day.
+        // -1 (31 Dec 1969) stands for "no date given" - nobody sets a task for then.
+        const val DUE_DATE_ARG = "dueDate"
+        const val NO_DUE_DATE = -1L
 
         val Factory = viewModelFactory {
             initializer {
