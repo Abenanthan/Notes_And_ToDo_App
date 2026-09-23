@@ -43,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.notestodo.data.local.Task
 import com.example.notestodo.ui.common.EmptyMessage
+import com.example.notestodo.ui.common.SettingsAction
 import com.example.notestodo.ui.tasks.TaskRow
 import com.example.notestodo.ui.tasks.formatDueDate
 import com.example.notestodo.viewmodel.CalendarViewModel
@@ -58,6 +59,7 @@ import java.util.Locale
 fun CalendarScreen(
     onTaskClick: (Long) -> Unit,
     onAddTask: (LocalDate) -> Unit,
+    onOpenSettings: () -> Unit,
     viewModel: CalendarViewModel = viewModel(factory = CalendarViewModel.Factory),
 ) {
     val monthTasks = viewModel.monthTasks.collectAsStateWithLifecycle().value
@@ -71,6 +73,7 @@ fun CalendarScreen(
                 title = { Text("Calendar") },
                 actions = {
                     TextButton(onClick = viewModel::showToday) { Text("Today") }
+                    SettingsAction(onOpenSettings)
                 },
             )
         },

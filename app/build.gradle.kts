@@ -24,6 +24,8 @@ android {
 
     buildFeatures {
         compose = true
+        // Generates BuildConfig, so the Settings screen can show the version name.
+        buildConfig = true
     }
 }
 
@@ -42,6 +44,9 @@ ksp {
 dependencies {
     // Notifications (NotificationCompat) and permission checks
     implementation(libs.androidx.core.ktx)
+
+    // Stores the theme settings
+    implementation(libs.androidx.datastore.preferences)
 
     // Compose
     implementation(platform(libs.androidx.compose.bom))

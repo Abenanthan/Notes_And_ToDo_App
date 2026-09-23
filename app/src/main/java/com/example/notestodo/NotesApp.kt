@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.room.Room
 import com.example.notestodo.data.local.AppDatabase
 import com.example.notestodo.data.repository.NoteRepository
+import com.example.notestodo.data.repository.SettingsRepository
 import com.example.notestodo.data.repository.TaskRepository
 import com.example.notestodo.reminder.TaskReminderScheduler
 import com.example.notestodo.reminder.createReminderChannel
@@ -20,6 +21,7 @@ class NotesApp : Application() {
 
     val noteRepository by lazy { NoteRepository(database.noteDao()) }
     val taskRepository by lazy { TaskRepository(database.taskDao(), reminderScheduler) }
+    val settingsRepository by lazy { SettingsRepository(this) }
 
     override fun onCreate() {
         super.onCreate()

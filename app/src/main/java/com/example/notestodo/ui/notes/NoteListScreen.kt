@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.notestodo.data.local.Note
 import com.example.notestodo.ui.common.EmptyMessage
+import com.example.notestodo.ui.common.SettingsAction
 import com.example.notestodo.viewmodel.NoteListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,12 +48,18 @@ import com.example.notestodo.viewmodel.NoteListViewModel
 fun NoteListScreen(
     onNoteClick: (Long) -> Unit,
     onAddNote: () -> Unit,
+    onOpenSettings: () -> Unit,
     viewModel: NoteListViewModel = viewModel(factory = NoteListViewModel.Factory),
 ) {
     val notes = viewModel.notes.collectAsStateWithLifecycle().value
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Notes") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Notes") },
+                actions = { SettingsAction(onOpenSettings) },
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddNote) {
                 Icon(Icons.Default.Add, contentDescription = "Add note")

@@ -10,16 +10,17 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-// Follows the system dark mode for now. The in-app theme toggle (Phase 5) will pass darkTheme in.
+// Both arguments come from the user's settings; the defaults are what a Preview gets.
 @Composable
 fun NotesToDoTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
     val colorScheme = when {
-        // Android 12+ takes its colors from the user's wallpaper (Material You).
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+        // Android 12+ can take its colours from the user's wallpaper (Material You).
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         darkTheme -> darkColorScheme()
         else -> lightColorScheme()

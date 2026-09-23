@@ -26,6 +26,7 @@ import androidx.navigation.navArgument
 import com.example.notestodo.ui.calendar.CalendarScreen
 import com.example.notestodo.ui.notes.NoteEditScreen
 import com.example.notestodo.ui.notes.NoteListScreen
+import com.example.notestodo.ui.settings.SettingsScreen
 import com.example.notestodo.ui.tasks.TaskEditScreen
 import com.example.notestodo.ui.tasks.TaskListScreen
 import com.example.notestodo.viewmodel.NoteEditViewModel.Companion.NEW_NOTE_ID
@@ -40,6 +41,7 @@ private const val NOTE_EDIT_ROUTE = "note" // full route: "note/{noteId}"
 private const val TASK_LIST_ROUTE = "tasks"
 private const val TASK_EDIT_ROUTE = "task" // full route: "task/{taskId}?dueDate={dueDate}"
 private const val CALENDAR_ROUTE = "calendar"
+private const val SETTINGS_ROUTE = "settings"
 
 // The tabs in the bottom bar.
 private enum class TopLevelTab(val route: String, val label: String, val icon: ImageVector) {
@@ -75,6 +77,7 @@ fun AppNavigation() {
                 NoteListScreen(
                     onNoteClick = { id -> navController.navigate("$NOTE_EDIT_ROUTE/$id") },
                     onAddNote = { navController.navigate("$NOTE_EDIT_ROUTE/$NEW_NOTE_ID") },
+                    onOpenSettings = { navController.navigate(SETTINGS_ROUTE) },
                 )
             }
             composable(
@@ -88,6 +91,7 @@ fun AppNavigation() {
                 TaskListScreen(
                     onTaskClick = { id -> navController.navigate("$TASK_EDIT_ROUTE/$id") },
                     onAddTask = { navController.navigate("$TASK_EDIT_ROUTE/$NEW_TASK_ID") },
+                    onOpenSettings = { navController.navigate(SETTINGS_ROUTE) },
                 )
             }
             // "?dueDate=..." is optional: the task list opens this screen without it,
@@ -113,7 +117,12 @@ fun AppNavigation() {
                             "$TASK_EDIT_ROUTE/$NEW_TASK_ID?$DUE_DATE_ARG=${date.toEpochDay()}"
                         )
                     },
+                    onOpenSettings = { navController.navigate(SETTINGS_ROUTE) },
                 )
+            }
+
+            composable(SETTINGS_ROUTE) {
+                SettingsScreen(onBack = { navController.popBackStack() })
             }
         }
     }

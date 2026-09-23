@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.notestodo.ui.common.EmptyMessage
+import com.example.notestodo.ui.common.SettingsAction
 import com.example.notestodo.viewmodel.TaskListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,13 +38,19 @@ import com.example.notestodo.viewmodel.TaskListViewModel
 fun TaskListScreen(
     onTaskClick: (Long) -> Unit,
     onAddTask: () -> Unit,
+    onOpenSettings: () -> Unit,
     viewModel: TaskListViewModel = viewModel(factory = TaskListViewModel.Factory),
 ) {
     val tasks = viewModel.tasks.collectAsStateWithLifecycle().value
     var showClearDialog by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Tasks") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Tasks") },
+                actions = { SettingsAction(onOpenSettings) },
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddTask) {
                 Icon(Icons.Default.Add, contentDescription = "Add task")
