@@ -32,6 +32,18 @@
             android:name=".reminder.TaskReminderReceiver"
             android:exported="false" />
 
+        <!-- The launcher hosts the widget from outside the app, so this must be exported. -->
+        <receiver
+            android:name=".widget.TodayTasksWidgetReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/today_tasks_widget_info" />
+        </receiver>
+
         <!-- The system sends BOOT_COMPLETED from outside the app, so this must be exported. -->
         <receiver
             android:name=".reminder.BootReceiver"

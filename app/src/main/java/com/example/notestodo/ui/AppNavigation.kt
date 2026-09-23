@@ -29,6 +29,7 @@ import com.example.notestodo.ui.notes.NoteListScreen
 import com.example.notestodo.ui.settings.SettingsScreen
 import com.example.notestodo.ui.tasks.TaskEditScreen
 import com.example.notestodo.ui.tasks.TaskListScreen
+import com.example.notestodo.ui.trash.TrashScreen
 import com.example.notestodo.viewmodel.NoteEditViewModel.Companion.NEW_NOTE_ID
 import com.example.notestodo.viewmodel.NoteEditViewModel.Companion.NOTE_ID_ARG
 import com.example.notestodo.viewmodel.TaskEditViewModel.Companion.DUE_DATE_ARG
@@ -42,6 +43,7 @@ private const val TASK_LIST_ROUTE = "tasks"
 private const val TASK_EDIT_ROUTE = "task" // full route: "task/{taskId}?dueDate={dueDate}"
 private const val CALENDAR_ROUTE = "calendar"
 private const val SETTINGS_ROUTE = "settings"
+private const val TRASH_ROUTE = "trash"
 
 // The tabs in the bottom bar.
 private enum class TopLevelTab(val route: String, val label: String, val icon: ImageVector) {
@@ -122,7 +124,14 @@ fun AppNavigation() {
             }
 
             composable(SETTINGS_ROUTE) {
-                SettingsScreen(onBack = { navController.popBackStack() })
+                SettingsScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenTrash = { navController.navigate(TRASH_ROUTE) },
+                )
+            }
+
+            composable(TRASH_ROUTE) {
+                TrashScreen(onBack = { navController.popBackStack() })
             }
         }
     }

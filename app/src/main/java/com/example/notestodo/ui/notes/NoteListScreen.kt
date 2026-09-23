@@ -167,9 +167,10 @@ private fun NoteCard(note: Note, onClick: () -> Unit, modifier: Modifier = Modif
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            if (note.content.isNotBlank()) {
+            val preview = markdownToPlainText(note.content)
+            if (preview.isNotBlank()) {
                 Text(
-                    text = note.content,
+                    text = preview,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 8,
                     overflow = TextOverflow.Ellipsis,

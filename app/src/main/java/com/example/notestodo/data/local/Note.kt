@@ -12,6 +12,8 @@ data class Note(
     // defaultValue lets AutoMigration fill these in for notes that already exist.
     @ColumnInfo(defaultValue = "0") val isFavourite: Boolean = false,
     @ColumnInfo(defaultValue = "0") val colorIndex: Int = 0, // 0 = the theme's own card colour
+    // Set when the note goes to the trash; null means it is a live note.
+    val deletedAt: Long? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
 )

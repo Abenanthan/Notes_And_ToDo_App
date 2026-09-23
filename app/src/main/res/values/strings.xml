@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Notes &amp; To-Do</string>
+    <string name="widget_description">Your tasks due today</string>
 </resources>

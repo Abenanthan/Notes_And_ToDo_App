@@ -114,7 +114,7 @@ fun TaskEditScreen(
                 },
                 actions = {
                     IconButton(onClick = { showDeleteDialog = true }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete task")
+                        Icon(Icons.Default.Delete, contentDescription = "Move task to trash")
                     }
                 },
             )
@@ -229,13 +229,13 @@ fun TaskEditScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete task?") },
-            text = { Text("This task will be permanently deleted.") },
+            title = { Text("Move task to trash?") },
+            text = { Text("You can restore it from Settings \u2192 Trash for 30 days.") },
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteDialog = false
                     viewModel.delete()
-                }) { Text("Delete") }
+                }) { Text("Move to trash") }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") }

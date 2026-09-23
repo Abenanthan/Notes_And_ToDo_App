@@ -79,7 +79,8 @@ class TaskEditViewModel(
         val trimmedTitle = title.trim()
         when {
             // A task needs a title: clearing it removes the task, and a blank new task is never saved.
-            trimmedTitle.isEmpty() -> task?.let { repository.deleteTask(it) }
+            // A task with its title erased has nothing worth restoring.
+            trimmedTitle.isEmpty() -> task?.let { repository.deleteTaskForever(it) }
             task == null -> repository.saveTask(Task(title = trimmedTitle, dueDate = dueDate, dueTime = dueTime))
             task.title != trimmedTitle || task.dueDate != dueDate || task.dueTime != dueTime ->
                 repository.saveTask(task.copy(title = trimmedTitle, dueDate = dueDate, dueTime = dueTime))
@@ -88,7 +89,7 @@ class TaskEditViewModel(
     }
 
     fun delete() = finish {
-        existingTask?.let { repository.deleteTask(it) }
+        existingTask?.let { repository.moveTaskToTrash(it) }
     }
 
     // Runs the database work before signalling the screen to close. The guard stops

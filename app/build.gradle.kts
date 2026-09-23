@@ -48,6 +48,13 @@ dependencies {
     // Stores the theme settings
     implementation(libs.androidx.datastore.preferences)
 
+    // Home-screen widget, built with composables instead of RemoteViews
+    implementation(libs.androidx.glance.appwidget)
+
+    // Rich text editing. rc11 is the last build against Compose 1.7; newer releases pull
+    // in Compose 1.11+ and would drag the whole app's Compose version up with them.
+    implementation(libs.rich.editor)
+
     // Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
@@ -55,6 +62,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.core)
+    // Formatting and attachment icons; R8 strips the unused ones from release builds.
+    implementation(libs.androidx.compose.material.icons.extended)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     // ViewModel + lifecycle-aware Flow collection

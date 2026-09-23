@@ -14,7 +14,8 @@ interface NoteDao {
     @Query(
         """
         SELECT * FROM notes
-        WHERE title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%'
+        WHERE deletedAt IS NULL
+          AND (title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%')
         ORDER BY isFavourite DESC, updatedAt DESC
         """
     )
@@ -27,6 +28,16 @@ interface NoteDao {
     @Upsert
     suspend fun upsert(note: Note)
 
+    @Query("SELECT * FROM notes WHERE deletedAt IS NOT NULL ORDER BY deletedAt DESC")
+    fun getDeletedNotes(): Flow<List<Note>>
+
+    // Permanent: @Delete removes the row, unlike moving a note to the trash.
     @Delete
     suspend fun delete(note: Note)
+
+    @Query("DELETE FROM notes WHERE deletedAt IS NOT NULL")
+    suspend fun purgeAllDeleted()
+
+    @Query("DELETE FROM notes WHERE deletedAt IS NOT NULL AND deletedAt < :cutoff")
+    suspend fun purgeDeletedBefore(cutoff: Long)
 }

@@ -14,5 +14,17 @@ class NoteRepository(private val noteDao: NoteDao) {
 
     suspend fun saveNote(note: Note) = noteDao.upsert(note)
 
-    suspend fun deleteNote(note: Note) = noteDao.delete(note)
+    fun getDeletedNotes(): Flow<List<Note>> = noteDao.getDeletedNotes()
+
+    // Soft delete: the row stays put with a timestamp, so the note can come back.
+    suspend fun moveNoteToTrash(note: Note) =
+        noteDao.upsert(note.copy(deletedAt = System.currentTimeMillis()))
+
+    suspend fun restoreNote(note: Note) = noteDao.upsert(note.copy(deletedAt = null))
+
+    suspend fun deleteNoteForever(note: Note) = noteDao.delete(note)
+
+    suspend fun emptyNoteTrash() = noteDao.purgeAllDeleted()
+
+    suspend fun purgeNotesDeletedBefore(cutoff: Long) = noteDao.purgeDeletedBefore(cutoff)
 }

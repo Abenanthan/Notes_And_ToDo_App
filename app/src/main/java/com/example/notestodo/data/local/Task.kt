@@ -12,5 +12,7 @@ data class Task(
     val dueDate: LocalDate? = null, // stored as a day number, see Converters
     val dueTime: LocalTime? = null, // set a time as well and the task gets a reminder
     val isDone: Boolean = false,
+    // Set when the task goes to the trash; null means it is a live task.
+    val deletedAt: Long? = null,
     val createdAt: Long = System.currentTimeMillis(),
 )

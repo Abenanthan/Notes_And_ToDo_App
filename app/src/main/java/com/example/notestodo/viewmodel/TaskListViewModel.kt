@@ -25,7 +25,7 @@ class TaskListViewModel(private val repository: TaskRepository) : ViewModel() {
     }
 
     fun clearCompleted() {
-        viewModelScope.launch { repository.deleteCompletedTasks() }
+        viewModelScope.launch { repository.trashCompletedTasks() }
     }
 
     companion object {

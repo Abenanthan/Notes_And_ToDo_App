@@ -102,13 +102,13 @@ fun TaskListScreen(
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
-            title = { Text("Delete completed tasks?") },
-            text = { Text("All completed tasks will be permanently deleted.") },
+            title = { Text("Clear completed tasks?") },
+            text = { Text("They move to the trash, where you can still restore them.") },
             confirmButton = {
                 TextButton(onClick = {
                     showClearDialog = false
                     viewModel.clearCompleted()
-                }) { Text("Delete") }
+                }) { Text("Clear") }
             },
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) { Text("Cancel") }

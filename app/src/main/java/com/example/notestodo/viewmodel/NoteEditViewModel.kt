@@ -13,6 +13,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.notestodo.NotesApp
 import com.example.notestodo.data.local.Note
 import com.example.notestodo.data.repository.NoteRepository
+import com.example.notestodo.ui.notes.markdownToPlainText
 import kotlinx.coroutines.launch
 
 class NoteEditViewModel(
@@ -29,7 +30,17 @@ class NoteEditViewModel(
 
     var title by mutableStateOf("")
         private set
+    // The body as loaded from the database; the editor seeds itself from this and owns
+    // the live text from then on, handing it back when the note is saved.
     var content by mutableStateOf("")
+        private set
+
+    // The editor can only load the note once this is true.
+    var isLoaded by mutableStateOf(false)
+        private set
+
+    // Shown in the line under the title; a new note counts as written now.
+    var updatedAt by mutableStateOf(System.currentTimeMillis())
         private set
     var isFavourite by mutableStateOf(false)
         private set
@@ -42,6 +53,8 @@ class NoteEditViewModel(
     private var isClosing = false
 
     init {
+        // A new note has nothing to fetch, so the editor can start straight away.
+        isLoaded = isNewNote
         if (!isNewNote) {
             viewModelScope.launch {
                 existingNote = repository.getNote(noteId)?.also {
@@ -49,7 +62,9 @@ class NoteEditViewModel(
                     content = it.content
                     isFavourite = it.isFavourite
                     colorIndex = it.colorIndex
+                    updatedAt = it.updatedAt
                 }
+                isLoaded = true
             }
         }
     }
@@ -58,8 +73,10 @@ class NoteEditViewModel(
         title = value
     }
 
-    fun onContentChange(value: String) {
-        content = value
+    // The editor reports the text it actually produced after loading. Markdown can come
+    // back slightly reformatted, and that alone should not count as an edit.
+    fun onEditorLoaded(markdown: String) {
+        content = markdown
     }
 
     fun onFavouriteToggle() {
@@ -70,22 +87,26 @@ class NoteEditViewModel(
         colorIndex = index
     }
 
-    // Auto-save when leaving the screen, like Google Keep.
-    fun saveAndClose() = finish {
+    // Auto-save when leaving the screen, like Google Keep. The body comes from the
+    // editor, which holds the live text.
+    fun saveAndClose(body: String) = finish {
         val note = existingNote
+        // Markdown leftovers such as a stray "- " should not count as content.
+        val plainBody = markdownToPlainText(body)
         when {
             // Clearing a note completely removes it; a blank new note is never saved.
-            title.isBlank() && content.isBlank() -> note?.let { repository.deleteNote(it) }
+            // An emptied note has nothing worth restoring, so it skips the trash.
+            title.isBlank() && plainBody.isBlank() -> note?.let { repository.deleteNoteForever(it) }
             note == null -> repository.saveNote(
-                Note(title = title, content = content, isFavourite = isFavourite, colorIndex = colorIndex)
+                Note(title = title, content = body, isFavourite = isFavourite, colorIndex = colorIndex)
             )
             // Only touch updatedAt if something actually changed, so just opening
             // a note doesn't move it to the top of the list.
-            note.title != title || note.content != content ||
+            note.title != title || body != content ||
                 note.isFavourite != isFavourite || note.colorIndex != colorIndex -> repository.saveNote(
                 note.copy(
                     title = title,
-                    content = content,
+                    content = body,
                     isFavourite = isFavourite,
                     colorIndex = colorIndex,
                     updatedAt = System.currentTimeMillis(),
@@ -96,7 +117,7 @@ class NoteEditViewModel(
     }
 
     fun delete() = finish {
-        existingNote?.let { repository.deleteNote(it) }
+        existingNote?.let { repository.moveNoteToTrash(it) }
     }
 
     // Runs the database work before signalling the screen to close. The guard stops

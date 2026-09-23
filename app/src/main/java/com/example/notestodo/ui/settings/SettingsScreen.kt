@@ -1,6 +1,7 @@
 package com.example.notestodo.ui.settings
 
 import android.os.Build
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -9,6 +10,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -27,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.notestodo.BuildConfig
+import com.example.notestodo.NotesApp
 import com.example.notestodo.data.repository.ThemeMode
 import com.example.notestodo.viewmodel.SettingsViewModel
 
@@ -34,6 +37,7 @@ import com.example.notestodo.viewmodel.SettingsViewModel
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onOpenTrash: () -> Unit,
     viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory),
 ) {
     val settings = viewModel.settings.collectAsStateWithLifecycle().value
@@ -93,6 +97,18 @@ fun SettingsScreen(
                         enabled = dynamicColorSupported,
                     )
                 },
+            )
+
+            HorizontalDivider()
+
+            SectionHeader("Data")
+            ListItem(
+                headlineContent = { Text("Trash") },
+                supportingContent = {
+                    Text("Deleted notes and tasks, kept for ${NotesApp.TRASH_RETENTION.inWholeDays} days")
+                },
+                leadingContent = { Icon(Icons.Default.Delete, contentDescription = null) },
+                modifier = Modifier.clickable(onClick = onOpenTrash),
             )
 
             HorizontalDivider()
