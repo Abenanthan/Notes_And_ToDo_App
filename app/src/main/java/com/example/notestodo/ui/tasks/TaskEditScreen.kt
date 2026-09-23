@@ -1,6 +1,12 @@
 package com.example.notestodo.ui.tasks
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -15,6 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DatePicker
@@ -27,8 +34,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,14 +49,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.notestodo.reminder.canScheduleExactReminders
+import com.example.notestodo.reminder.exactAlarmSettingsIntent
 import com.example.notestodo.ui.common.plainTextFieldColors
 import com.example.notestodo.viewmodel.TaskEditViewModel
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,8 +70,31 @@ fun TaskEditScreen(
     onBack: () -> Unit,
     viewModel: TaskEditViewModel = viewModel(factory = TaskEditViewModel.Factory),
 ) {
+    val context = LocalContext.current
     var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
+    var showTimePicker by rememberSaveable { mutableStateOf(false) }
+    var showExactAlarmDialog by rememberSaveable { mutableStateOf(false) }
+
+    // Android 13+ asks before an app may post notifications. Once that is answered, check
+    // whether reminders are also allowed to be punctual.
+    val notificationPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) {
+        if (!canScheduleExactReminders(context)) showExactAlarmDialog = true
+    }
+
+    // Both prompts only make sense the moment a reminder is actually set.
+    fun onReminderSet() {
+        val needsNotificationPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        when {
+            needsNotificationPermission ->
+                notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            !canScheduleExactReminders(context) -> showExactAlarmDialog = true
+        }
+    }
 
     // Navigate away only after the ViewModel has finished writing to the database.
     LaunchedEffect(viewModel.isFinished) {
@@ -87,6 +124,7 @@ fun TaskEditScreen(
     ) { padding ->
         val titleFocus = remember { FocusRequester() }
         val dueDate = viewModel.dueDate
+        val dueTime = viewModel.dueTime
 
         Column(Modifier.fillMaxSize().padding(padding)) {
             TextField(
@@ -104,15 +142,34 @@ fun TaskEditScreen(
                 keyboardActions = KeyboardActions(onDone = { viewModel.saveAndClose() }),
             )
 
-            Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                AssistChip(
-                    onClick = { showDatePicker = true },
-                    label = { Text(if (dueDate == null) "Add due date" else formatDueDate(dueDate)) },
-                    leadingIcon = { Icon(Icons.Default.DateRange, contentDescription = null) },
-                )
-                if (dueDate != null) {
-                    IconButton(onClick = { viewModel.onDueDateChange(null) }) {
-                        Icon(Icons.Default.Close, contentDescription = "Remove due date")
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AssistChip(
+                        onClick = { showDatePicker = true },
+                        label = { Text(if (dueDate == null) "Add due date" else formatDueDate(dueDate)) },
+                        leadingIcon = { Icon(Icons.Default.DateRange, contentDescription = null) },
+                    )
+                    if (dueDate != null) {
+                        IconButton(onClick = { viewModel.onDueDateChange(null) }) {
+                            Icon(Icons.Default.Close, contentDescription = "Remove due date")
+                        }
+                    }
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AssistChip(
+                        onClick = { showTimePicker = true },
+                        // A reminder needs a day to fire on.
+                        enabled = dueDate != null,
+                        label = { Text(if (dueTime == null) "Add reminder" else formatDueTime(dueTime)) },
+                        leadingIcon = { Icon(Icons.Default.Notifications, contentDescription = null) },
+                    )
+                    if (dueTime != null) {
+                        IconButton(onClick = { viewModel.onDueTimeChange(null) }) {
+                            Icon(Icons.Default.Close, contentDescription = "Remove reminder")
+                        }
                     }
                 }
             }
@@ -132,6 +189,40 @@ fun TaskEditScreen(
                 showDatePicker = false
             },
             onDismiss = { showDatePicker = false },
+        )
+    }
+
+    if (showTimePicker) {
+        ReminderTimePickerDialog(
+            initialTime = viewModel.dueTime,
+            onTimeSelected = {
+                viewModel.onDueTimeChange(it)
+                showTimePicker = false
+                onReminderSet()
+            },
+            onDismiss = { showTimePicker = false },
+        )
+    }
+
+    if (showExactAlarmDialog) {
+        AlertDialog(
+            onDismissRequest = { showExactAlarmDialog = false },
+            title = { Text("Allow exact reminders?") },
+            text = {
+                Text(
+                    "Android may hold reminders back by a few minutes unless this app is " +
+                        "allowed to set exact alarms."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showExactAlarmDialog = false
+                    context.startActivity(exactAlarmSettingsIntent(context))
+                }) { Text("Open settings") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExactAlarmDialog = false }) { Text("Not now") }
+            },
         )
     }
 
@@ -176,6 +267,36 @@ private fun DueDatePickerDialog(
     ) {
         DatePicker(state = pickerState)
     }
+}
+
+// Material3 1.3 has the clock face but no ready-made dialog around it, so it goes in an AlertDialog.
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReminderTimePickerDialog(
+    initialTime: LocalTime?,
+    onTimeSelected: (LocalTime) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    // A fresh reminder starts at the next full hour rather than at midnight.
+    val startFrom = initialTime ?: LocalTime.now().plusHours(1).withMinute(0)
+    val pickerState = rememberTimePickerState(
+        initialHour = startFrom.hour,
+        initialMinute = startFrom.minute,
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Remind me at") },
+        text = { TimePicker(state = pickerState) },
+        confirmButton = {
+            TextButton(onClick = {
+                onTimeSelected(LocalTime.of(pickerState.hour, pickerState.minute))
+            }) { Text("OK") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        },
+    )
 }
 
 // Material's DatePicker works in UTC milliseconds. Converting with UTC both ways stops

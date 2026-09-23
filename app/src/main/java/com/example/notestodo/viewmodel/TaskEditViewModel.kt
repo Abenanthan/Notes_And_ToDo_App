@@ -15,6 +15,7 @@ import com.example.notestodo.data.local.Task
 import com.example.notestodo.data.repository.TaskRepository
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalTime
 
 // Same pattern as NoteEditViewModel: load by id, edit in Compose state, save on the way out.
 class TaskEditViewModel(
@@ -34,6 +35,10 @@ class TaskEditViewModel(
     var dueDate by mutableStateOf<LocalDate?>(null)
         private set
 
+    // A time turns the due date into a reminder; without a date it means nothing.
+    var dueTime by mutableStateOf<LocalTime?>(null)
+        private set
+
     // Becomes true after the save/delete has finished; the screen then navigates back.
     var isFinished by mutableStateOf(false)
         private set
@@ -49,6 +54,7 @@ class TaskEditViewModel(
                 existingTask = repository.getTask(taskId)?.also {
                     title = it.title
                     dueDate = it.dueDate
+                    dueTime = it.dueTime
                 }
             }
         }
@@ -60,6 +66,12 @@ class TaskEditViewModel(
 
     fun onDueDateChange(date: LocalDate?) {
         dueDate = date
+        // Clearing the day leaves nothing for a reminder to fire on.
+        if (date == null) dueTime = null
+    }
+
+    fun onDueTimeChange(time: LocalTime?) {
+        dueTime = time
     }
 
     fun saveAndClose() = finish {
@@ -68,9 +80,9 @@ class TaskEditViewModel(
         when {
             // A task needs a title: clearing it removes the task, and a blank new task is never saved.
             trimmedTitle.isEmpty() -> task?.let { repository.deleteTask(it) }
-            task == null -> repository.saveTask(Task(title = trimmedTitle, dueDate = dueDate))
-            task.title != trimmedTitle || task.dueDate != dueDate ->
-                repository.saveTask(task.copy(title = trimmedTitle, dueDate = dueDate))
+            task == null -> repository.saveTask(Task(title = trimmedTitle, dueDate = dueDate, dueTime = dueTime))
+            task.title != trimmedTitle || task.dueDate != dueDate || task.dueTime != dueTime ->
+                repository.saveTask(task.copy(title = trimmedTitle, dueDate = dueDate, dueTime = dueTime))
             else -> Unit // unchanged, nothing to save
         }
     }

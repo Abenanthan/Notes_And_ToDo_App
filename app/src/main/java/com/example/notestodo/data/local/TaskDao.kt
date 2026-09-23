@@ -2,8 +2,9 @@ package com.example.notestodo.data.local
 
 import androidx.room.Dao
 import androidx.room.Delete
+import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.Upsert
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -23,9 +24,18 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE id = :id")
     suspend fun getTask(id: Long): Task?
 
-    // Inserts when id = 0 (new task), updates when the id already exists.
-    @Upsert
-    suspend fun upsert(task: Task)
+    // Returns the new row's id, which the repository needs to schedule the reminder
+    // of a task that has just been created.
+    @Insert
+    suspend fun insert(task: Task): Long
+
+    @Update
+    suspend fun update(task: Task)
+
+    // Unfinished tasks that still have a reminder due; used to set the alarms again
+    // after the device restarts.
+    @Query("SELECT * FROM tasks WHERE dueTime IS NOT NULL AND isDone = 0")
+    suspend fun getTasksWithReminders(): List<Task>
 
     @Delete
     suspend fun delete(task: Task)

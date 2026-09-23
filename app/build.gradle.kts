@@ -40,6 +40,9 @@ ksp {
 }
 
 dependencies {
+    // Notifications (NotificationCompat) and permission checks
+    implementation(libs.androidx.core.ktx)
+
     // Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

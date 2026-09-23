@@ -10,7 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
 import com.example.notestodo.data.local.Task
-import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 // One task line: checkbox, title, and the due date underneath. Shared by the task list
 // and the calendar, which hides the date because every task shown there has the same one.
@@ -23,6 +24,14 @@ fun TaskRow(
     showDueDate: Boolean = true,
 ) {
     val dueDate = task.dueDate
+    val dueTime = task.dueTime
+    // On the calendar the date is already obvious, but the time still tells you something.
+    val supportingText = when {
+        dueDate != null && showDueDate ->
+            formatDueDate(dueDate) + (dueTime?.let { ", ${formatDueTime(it)}" } ?: "")
+        dueTime != null -> formatDueTime(dueTime)
+        else -> null
+    }
     ListItem(
         headlineContent = {
             Text(
@@ -32,12 +41,14 @@ fun TaskRow(
             )
         },
         modifier = modifier.clickable(onClick = onClick),
-        supportingContent = if (dueDate != null && showDueDate) {
+        supportingContent = if (supportingText != null) {
             {
-                // Overdue dates turn red until the task is done.
-                val isOverdue = !task.isDone && dueDate.isBefore(LocalDate.now())
+                // Red once the moment it was due has passed, until the task is ticked off.
+                // A task with no time counts as due at the end of its day.
+                val isOverdue = !task.isDone && dueDate != null &&
+                    LocalDateTime.of(dueDate, dueTime ?: LocalTime.MAX).isBefore(LocalDateTime.now())
                 Text(
-                    text = formatDueDate(dueDate),
+                    text = supportingText,
                     color = if (isOverdue) MaterialTheme.colorScheme.error else Color.Unspecified,
                 )
             }
